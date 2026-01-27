@@ -1,0 +1,228 @@
+<div class="todo-container">
+  <h1 class="todo-title">To Do List</h1>
+
+  <!-- Add Todo Form -->
+  @if (!showForm()) {
+  <button type="button" class="new-task-button" (click)="toggleForm()">
+    <ng-icon name="bootstrapPlus" class="new-task-icon"></ng-icon>
+    <span>New Task</span>
+  </button>
+  } @if (showForm()) {
+  <form class="add-todo-form" (ngSubmit)="addTodo($event)" (submit)="$event.preventDefault()">
+    <input type="text" [formControl]="todoInput" placeholder="What needs to be done?" class="todo-input"
+      (keyup.enter)="addTodo()" />
+    <div class="category-input-wrapper">
+      @if (!showNewCategoryInput()) {
+      <select class="category-input" [value]="categoryInput.value || 'Uncategorized'"
+        (change)="onCategorySelectChange($any($event.target).value)">
+        @for (category of categories(); track category) {
+        <option [value]="category">{{ category }}</option>
+        }
+        <option value="__new__">+ New Category</option>
+      </select>
+      } @else {
+      <div class="new-category-input-row">
+        <input type="text" [formControl]="newCategoryInput" placeholder="Enter new category" class="category-input"
+          (keyup.enter)="confirmNewCategory()" (keyup.escape)="cancelNewCategory()" />
+        <button type="button" class="confirm-category-btn" (click)="confirmNewCategory()">✓</button>
+        <button type="button" class="cancel-category-btn" (click)="cancelNewCategory()">✕</button>
+      </div>
+      }
+    </div>
+    <button type="button" class="add-button" (click)="addTodo()">Add</button>
+    <button type="button" class="cancel-button" (click)="toggleForm()">Cancel</button>
+  </form>
+  }
+  <!-- Filter Buttons -->
+  <div class="filter-buttons">
+    <button (click)="setFilter('all')" [class.active]="currentFilter() === 'all'" class="filter-btn">
+      All
+    </button>
+    <button (click)="setFilter('active')" [class.active]="currentFilter() === 'active'" class="filter-btn">
+      Active
+    </button>
+    <button (click)="setFilter('completed')" [class.active]="currentFilter() === 'completed'" class="filter-btn">
+      Completed
+    </button>
+  </div>
+
+  <!-- Category Filter -->
+  <!-- <div class="category-filter">
+    <label for="category-select">Filter by Category:</label>
+    <select
+      id="category-select"
+      class="category-select"
+      [value]="selectedCategory()"
+      (change)="setCategory($any($event.target).value)"
+    >
+      <option value="all">All Categories</option>
+      @for (category of categories(); track category) {
+      <option [value]="category">{{ category }}</option>
+      }
+    </select>
+  </div> -->
+
+  <!-- Category Management
+  <div class="category-management">
+    <h3 class="category-management-title">Categories</h3>
+    <div class="category-list">
+      @for (category of categories(); track category) {
+      <div class="category-item">
+        <span class="category-name">{{ category }}</span>
+        <span class="category-count">({{ getCategoryCount(category) }})</span>
+        @if (category !== 'Uncategorized') {
+        <button
+          (click)="deleteCategory(category)"
+          class="category-delete-btn"
+          aria-label="Delete category {{ category }}"
+          title="Delete category and move todos to Uncategorized"
+        >
+          <ng-icon name="bootstrapX" class="category-delete-icon"></ng-icon>
+        </button>
+        }
+      </div>
+      }
+    </div>
+  </div> -->
+
+  <!-- Search Bar -->
+  <div class="search-bar">
+    <div class="search-input-wrapper">
+      <ng-icon name="bootstrapSearch" class="search-icon"></ng-icon>
+      <input type="text" placeholder="Search to-dos" class="search-input" (input)="onSearchChange($event)"
+        [value]="searchTerm()" />
+    </div>
+  </div>
+
+  <!-- Todo List -->
+  <!-- <ul class="todo-list" cdkDropList (cdkDropListDropped)="drop($event)">
+    @for (todo of todos(); track todo.id) {
+    <li class="todo-item" [class.completed]="todo.completed" cdkDrag>
+      <div class="todo-content" cdkDragHandle>
+        <input
+          type="checkbox"
+          [checked]="todo.completed"
+          (change)="toggleTodo(todo.id)"
+          [disabled]="editingId() === todo.id"
+          class="todo-checkbox"
+        />
+
+        @if (editingId() === todo.id) {
+        <div class="edit-mode">
+          <input
+            type="text"
+            [formControl]="editText"
+            class="edit-input"
+            (keyup.enter)="saveEdit(todo.id)"
+            (keyup.escape)="cancelEdit()"
+            #editInput
+          />
+          <div class="category-input-wrapper">
+            <input
+              type="text"
+              [formControl]="categoryInput"
+              placeholder="Category"
+              class="category-edit-input"
+              (keyup.enter)="saveEdit(todo.id)"
+            />
+            <datalist id="category-edit-list">
+              @for (category of categories(); track category) {
+              <option [value]="category">{{ category }}</option>
+              }
+            </datalist>
+          </div>
+          <button (click)="saveEdit(todo.id)" class="save-btn">Save</button>
+          <button (click)="cancelEdit()" class="cancel-btn">Cancel</button>
+        </div>
+        } @else {
+        <div class="todo-text-container">
+          <span (dblclick)="startEdit(todo)" class="todo-text">{{ todo.text }}</span>
+          <span class="todo-category">{{ todo.category || 'Uncategorized' }}</span>
+        </div>
+        }
+
+        <button (click)="deleteTodo(todo.id)" class="delete-btn" aria-label="Delete Todo">
+          <ng-icon name="bootstrapTrash" class="delete-icon"></ng-icon>
+        </button>
+      </div>
+    </li>
+    } @empty {
+    <li class="empty-state">No todos found</li>
+    }
+  </ul> -->
+
+  <!-- Todo List by Category -->
+  <div class="todo-list-container">
+    @for (group of todosByCategory(); track group.category) {
+    <div class="category-group">
+      <div class="category-header" (click)="toggleCategory(group.category)">
+        <div class="category-header-left">
+          <ng-icon [name]="
+              isCategoryCollapsed(group.category) ? 'bootstrapChevronRight' : 'bootstrapChevronDown'
+            " class="category-chevron"></ng-icon>
+          <h2 class="category-title">{{ group.category }}</h2>
+        </div>
+        <span class="category-count">
+          {{ group.count }} {{ group.count === 1 ? 'item' : 'items' }}
+        </span>
+      </div>
+      @if(!isCategoryCollapsed(group.category)) {
+      <ul class="todo-list" cdkDropList (cdkDropListDropped)="drop($event)">
+        @for (todo of group.todos; track todo.id) {
+        <li class="todo-item" [class.completed]="todo.completed" cdkDrag>
+          <div class="todo-content" cdkDragHandle>
+            <input type="checkbox" [checked]="todo.completed" (change)="toggleTodo(todo.id)"
+              [disabled]="editingId() === todo.id" class="todo-checkbox" />
+
+            @if (editingId() === todo.id) {
+            <div class="edit-mode">
+              <input type="text" [formControl]="editText" class="edit-input" (keyup.enter)="saveEdit(todo.id)"
+                (keyup.escape)="cancelEdit()" #editInput />
+              <div class="category-input-wrapper">
+                @if (!showNewCategoryInput()) {
+                <select class="category-edit-input" [value]="categoryInput.value || 'Uncategorized'"
+                  (change)="onCategorySelectChange($any($event.target).value)">
+                  @for (category of categories(); track category) {
+                  <option [value]="category">{{ category }}</option>
+                  }
+                  <option value="__new__">+ New Category</option>
+                </select>
+                } @else {
+                <div class="new-category-input-row">
+                  <input type="text" [formControl]="newCategoryInput" placeholder="New category"
+                    class="category-edit-input" (keyup.enter)="confirmNewCategory()"
+                    (keyup.escape)="cancelNewCategory()" />
+                  <button type="button" class="confirm-category-btn" (click)="confirmNewCategory()">✓</button>
+                  <button type="button" class="cancel-category-btn" (click)="cancelNewCategory()">✕</button>
+                </div>
+                }
+              </div>
+              <button (click)="saveEdit(todo.id)" class="save-btn">Save</button>
+              <button (click)="cancelEdit()" class="cancel-btn">Cancel</button>
+            </div>
+            } @else {
+            <span (dblclick)="startEdit(todo)" class="todo-text">{{ todo.text }}</span>
+            }
+
+            <button (click)="deleteTodo(todo.id)" class="delete-btn" aria-label="Delete Todo">
+              <ng-icon name="bootstrapTrash" class="delete-icon"></ng-icon>
+            </button>
+          </div>
+        </li>
+        }
+      </ul>
+      }
+    </div>
+    }
+  </div>
+
+  <!-- Footer with count and clear button -->
+  <div class="todo-footer">
+    <span class="todo-count">
+      {{ activeCount() }} {{ activeCount() == 1 ? 'item' : 'items' }} left
+    </span>
+    @if (completedCount() > 0) {
+    <button (click)="clearCompleted()" class="clear-btn">Clear Completed</button>
+    }
+  </div>
+</div>

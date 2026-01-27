@@ -1,0 +1,7 @@
+<div class="'app-container">
+  <button class="theme-toggle" (click)="toggleTheme()" aria-label="Toggle dark mode">
+    <span class="theme-icon">{{ isDarkMode() ? '☀️' : '🌙' }}</span>
+  </button>
+  <app-todo-list></app-todo-list>
+  <router-outlet />
+</div>
